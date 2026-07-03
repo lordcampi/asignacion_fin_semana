@@ -139,36 +139,29 @@ def generate_dashboard_assignments(
     )
 
 
-def assignments_to_rows(assignments: dict[str, list[str]]) -> list[dict[str, str]]:
-    """Converts assignments into table rows.
+def assignments_to_grouped_text(assignments: dict[str, list[str]]) -> list[str]:
+    """Converts assignments into grouped text blocks, one per reviewer.
+
+    Each block shows the reviewer email followed by the list of agents
+    they must review, formatted for easy copy-paste into a file.
 
     Args:
         assignments: Mapping reviewer email to reviewed email list.
 
     Returns:
-        List of table rows.
+        List of formatted text blocks (reviewer + reviewed agents).
     """
-    rows: list[dict[str, str]] = []
+    blocks: list[str] = []
 
     for reviewer, reviewed_agents in assignments.items():
         if not reviewed_agents:
-            rows.append(
-                {
-                    "Revisor": reviewer,
-                    "Revisado": "—",
-                }
-            )
+            blocks.append(f"{reviewer}\n—")
             continue
 
-        for reviewed in reviewed_agents:
-            rows.append(
-                {
-                    "Revisor": reviewer,
-                    "Revisado": reviewed,
-                }
-            )
+        reviewed_text = "\n".join(reviewed_agents)
+        blocks.append(f"{reviewer}\n{reviewed_text}")
 
-    return rows
+    return blocks
 
 
 def _show_duplicate_warnings(
@@ -269,16 +262,18 @@ def run_app() -> None:
         return
 
     st.subheader("Asignaciones sábado")
-    saturday_rows = assignments_to_rows(result.saturday)
-    if saturday_rows:
-        st.table(saturday_rows)
+    saturday_blocks = assignments_to_grouped_text(result.saturday)
+    if saturday_blocks:
+        for block in saturday_blocks:
+            st.code(block, language=None)
     else:
         st.info("No hay agentes asignados para sábado.")
 
     st.subheader("Asignaciones domingo")
-    sunday_rows = assignments_to_rows(result.sunday)
-    if sunday_rows:
-        st.table(sunday_rows)
+    sunday_blocks = assignments_to_grouped_text(result.sunday)
+    if sunday_blocks:
+        for block in sunday_blocks:
+            st.code(block, language=None)
     else:
         st.info("No hay agentes asignados para domingo.")
 
