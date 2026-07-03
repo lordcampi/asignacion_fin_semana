@@ -12,6 +12,23 @@ logger = logging.getLogger(__name__)
 
 MAX_REVIEWS_PER_REVIEWER: Final[int] = 3
 
+ALL_AGENTS_FIXED: Final[str] = "\n".join([
+    "alejandro.perez_ndo.ext@pedidosya.com",
+    "cesar.castro_ndo.ext@pedidosya.com",
+    "christopher.larrosa_ndo.ext@pedidosya.com",
+    "david.garcia_ndo.ext@pedidosya.com",
+    "erika.carvajal_ndo.ext@pedidosya.com",
+    "genny.garcia_ndo.ext@pedidosya.com",
+    "johana.agudelo_ndo.ext@pedidosya.com",
+    "juan.cartagena_ndo.ext@pedidosya.com",
+    "karen.oviedo_ndo.ext@pedidosya.com",
+    "mayra.launas_ndo.ext@pedidosya.com",
+    "oswaldo.correa_ndo.ext@pedidosya.com",
+    "ronny.pinto_ndo.ext@pedidosya.com",
+    "victoria.gonzalez_ndo.ext@pedidosya.com",
+    "yovanny.corzo_ndo.ext@pedidosya.com",
+])
+
 
 class DashboardError(RuntimeError):
     """Raised when dashboard assignment generation fails."""
@@ -208,11 +225,7 @@ def run_app() -> None:
     )
 
     with st.form("assignment_form"):
-        all_agents_raw = st.text_area(
-            "Todos los agentes",
-            height=160,
-            placeholder="correo1@empresa.com correo2@empresa.com",
-        )
+        st.caption(f"Agentes totales: {ALL_AGENTS_FIXED.count(chr(10)) + 1}")
 
         col1, col2 = st.columns(2)
 
@@ -240,14 +253,14 @@ def run_app() -> None:
 
     try:
         _show_duplicate_warnings(
-            all_agents_raw=all_agents_raw,
+            all_agents_raw=ALL_AGENTS_FIXED,
             saturday_raw=saturday_raw,
             sunday_raw=sunday_raw,
             vacations_raw=vacations_raw,
         )
 
         result = generate_dashboard_assignments(
-            all_agents_raw=all_agents_raw,
+            all_agents_raw=ALL_AGENTS_FIXED,
             saturday_raw=saturday_raw,
             sunday_raw=sunday_raw,
             vacations_raw=vacations_raw,
