@@ -10,8 +10,6 @@ from services.input_manager import InputManager, InputValidationError
 
 logger = logging.getLogger(__name__)
 
-MAX_REVIEWS_PER_REVIEWER: Final[int] = 3
-
 ALL_AGENTS_FIXED: Final[str] = "\n".join([
     "alejandro.perez_ndo.ext@pedidosya.com",
     "cesar.castro_ndo.ext@pedidosya.com",
@@ -130,7 +128,7 @@ def generate_dashboard_assignments(
                 reviewers=saturday_reviewers,
                 candidates=saturday_candidates,
                 saturday_agents=set(),
-                max_reviews_per_reviewer=MAX_REVIEWS_PER_REVIEWER,
+                max_reviews_per_reviewer=len(saturday_candidates),
             )
             if saturday_reviewers
             else {}
@@ -141,7 +139,7 @@ def generate_dashboard_assignments(
                 reviewers=sunday_reviewers,
                 candidates=sunday_candidates,
                 saturday_agents=validated["saturday"],
-                max_reviews_per_reviewer=MAX_REVIEWS_PER_REVIEWER,
+                max_reviews_per_reviewer=len(sunday_candidates),
             )
             if sunday_reviewers
             else {}
