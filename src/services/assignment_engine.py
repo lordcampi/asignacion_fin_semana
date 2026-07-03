@@ -51,6 +51,7 @@ class AssignmentEngine:
         assignments: Dict[str, List[str]] = {
             r.email: [] for r in reviewers
         }
+        assigned_candidates: Set[str] = set()
 
         sorted_reviewers = self.balance.get_sorted_reviewers(reviewers)
 
@@ -62,7 +63,7 @@ class AssignmentEngine:
                 for c in candidates
                 if c.email != reviewer.email
                 and c.disponible
-                and c.email not in assignments[reviewer.email]
+                and c.email not in assigned_candidates
             ]
 
             for candidate in available_candidates:
@@ -89,6 +90,7 @@ class AssignmentEngine:
                     continue
 
                 assignments[reviewer.email].append(candidate.email)
+                assigned_candidates.add(candidate.email)
                 self.balance.register_assignment(reviewer)
 
         if all(len(reviews) == 0 for reviews in assignments.values()):
