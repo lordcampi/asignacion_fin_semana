@@ -128,7 +128,7 @@ def generate_dashboard_assignments(
                 reviewers=saturday_reviewers,
                 candidates=saturday_candidates,
                 saturday_agents=set(),
-                max_reviews_per_reviewer=len(saturday_candidates),
+                max_reviews_per_reviewer=-(-len(saturday_candidates) // len(saturday_reviewers)),
             )
             if saturday_reviewers
             else {}
@@ -139,7 +139,7 @@ def generate_dashboard_assignments(
                 reviewers=sunday_reviewers,
                 candidates=sunday_candidates,
                 saturday_agents=validated["saturday"],
-                max_reviews_per_reviewer=len(sunday_candidates),
+                max_reviews_per_reviewer=-(-len(sunday_candidates) // len(sunday_reviewers)),
             )
             if sunday_reviewers
             else {}
@@ -170,11 +170,11 @@ def assignments_to_grouped_text(assignments: dict[str, list[str]]) -> list[str]:
 
     for reviewer, reviewed_agents in assignments.items():
         if not reviewed_agents:
-            blocks.append(f"{reviewer}\n—")
+            blocks.append(f"{reviewer} (Turno)\n—")
             continue
 
         reviewed_text = "\n".join(reviewed_agents)
-        blocks.append(f"{reviewer}\n{reviewed_text}")
+        blocks.append(f"{reviewer} (Turno)\n{reviewed_text}")
 
     return blocks
 

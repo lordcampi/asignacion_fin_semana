@@ -34,7 +34,7 @@ class AssignmentEngine:
         max_reviews_per_reviewer: int,
     ) -> Dict[str, List[str]]:
         """
-        Generates valid and balanced assignments.
+        Generates valid and balanced assignments using round-robin.
 
         Args:
             reviewers: Agents who perform reviews.
@@ -52,46 +52,63 @@ class AssignmentEngine:
             r.email: [] for r in reviewers
         }
         assigned_candidates: Set[str] = set()
+        candidate_emails = [c.email for c in candidates]
 
-        sorted_reviewers = self.balance.get_sorted_reviewers(reviewers)
+        pending = [
+            c
+            for c in candidates
+            if c.disponible
+        ]
 
-        for reviewer in sorted_reviewers:
-            logger.info("Assigning reviews for %s", reviewer.email)
+        # Round-robin: in each round, iterate over reviewers sorted by load
+        while pending:
+            made_progress = False
+            sorted_reviewers = self.balance.get_sorted_reviewers(reviewers)
 
-            available_candidates = [
-                c
-                for c in candidates
-                if c.email != reviewer.email
-                and c.disponible
-                and c.email not in assigned_candidates
-            ]
-
-            for candidate in available_candidates:
+            for reviewer in sorted_reviewers:
                 if len(assignments[reviewer.email]) >= max_reviews_per_reviewer:
-                    break
-
-                tentative_emails = assignments[reviewer.email] + [candidate.email]
-                tentative_agents = [
-                    c for c in candidates if c.email in tentative_emails
-                ]
-
-                try:
-                    RuleEngine.validate_assignment(
-                        reviewer=reviewer,
-                        reviewed=tentative_agents,
-                        saturday_agents=saturday_agents,
-                    )
-                except RuleViolationError:
-                    logger.debug(
-                        "Skipping candidate %s for reviewer %s due to rule violation",
-                        candidate.email,
-                        reviewer.email,
-                    )
                     continue
 
-                assignments[reviewer.email].append(candidate.email)
-                assigned_candidates.add(candidate.email)
-                self.balance.register_assignment(reviewer)
+                available = [
+                    c
+                    for c in pending
+                    if c.email != reviewer.email
+                    and c.email not in assigned_candidates
+                ]
+
+                for candidate in available:
+                    tentative_emails = assignments[reviewer.email] + [candidate.email]
+                    tentative_agents = [
+                        c for c in candidates if c.email in tentative_emails
+                    ]
+
+                    try:
+                        RuleEngine.validate_assignment(
+                            reviewer=reviewer,
+                            reviewed=tentative_agents,
+                            saturday_agents=saturday_agents,
+                        )
+                    except RuleViolationError:
+                        logger.debug(
+                            "Skipping candidate %s for reviewer %s due to rule violation",
+                            candidate.email,
+                            reviewer.email,
+                        )
+                        continue
+
+                    assignments[reviewer.email].append(candidate.email)
+                    assigned_candidates.add(candidate.email)
+                    self.balance.register_assignment(reviewer)
+                    pending.remove(candidate)
+                    made_progress = True
+                    break
+
+            if not made_progress:
+                logger.error(
+                    "No progress in round-robin round. Pending: %s",
+                    [c.email for c in pending],
+                )
+                break
 
         if all(len(reviews) == 0 for reviews in assignments.values()):
             logger.error("No valid assignment found for any reviewer")
